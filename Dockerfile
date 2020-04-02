@@ -12,15 +12,27 @@ RUN cd $GOPATH/src/github.com/containers/skopeo \
 #---------------------------------------------------------------------
 # STAGE 2: Build the kubernetes-monitor
 #---------------------------------------------------------------------
-FROM node:erbium-alpine
+# FROM node:erbium-alpine
+FROM registry.redhat.io/ubi8/nodejs-12
 
-LABEL maintainer="Snyk Ltd"
+# LABEL maintainer="Snyk Ltd"
+LABEL maintainer="Snyk Ltd" \
+      name="kubernetes-monitor" \
+      vendor="Snyk Ltd" \
+      version="1.25.0" \
+      release="1" \
+      summary="Container to monitor Kubernetes clusters' security" \
+      description="Snyk integrates with Kubernetes, enabling you to import and test your running workloads and identify vulnerabilities in their associated images and configurations that might make those workloads less secure."
+
+COPY LICENSE /licenses/LICENSE
 
 ENV NODE_ENV production
 
-RUN apk update
-RUN apk upgrade
-RUN apk --no-cache add dumb-init
+# RUN apk update
+# RUN apk upgrade
+# RUN apk --no-cache add db dumb-init
+RUN yum update --disablerepo=* --enablerepo=ubi-8-appstream --enablerepo=ubi-8-baseos -y && rm -rf /var/cache/yum
+RUN yum install --disablerepo=* --enablerepo=ubi-8-appstream --enablerepo=ubi-8-baseos db dumb-init -y && rm -rf /var/cache/yum
 
 RUN addgroup -S -g 10001 snyk
 RUN adduser -S -G snyk -h /srv/app -u 10001 snyk
