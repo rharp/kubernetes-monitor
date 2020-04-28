@@ -43,7 +43,7 @@ commands:
           command: |
             export NVM_DIR="/opt/circleci/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm install v12
+            nvm install v12.16.2
             npm install
             echo 'export NVM_DIR="/opt/circleci/.nvm"' >> $BASH_ENV
             echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
@@ -56,7 +56,7 @@ commands:
             sudo apt update
             sudo apt install python3-requests
           when: always
-           
+
 
 jobs:
 ######################## PR OR MERGE TO STAGING ########################
@@ -154,7 +154,7 @@ jobs:
           command: |
             ./scripts/slack/notify_failure_on_branch.py "staging-unit-tests-${CIRCLE_SHA1}"
           when: on_fail
-  
+
   system_tests:
     <<: *default_machine_config
     steps:
@@ -252,7 +252,7 @@ jobs:
           command: |
             export NVM_DIR="/opt/circleci/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-            nvm install v12
+            nvm install v12.16.2
             npm install
             export KUBERNETES_MONITOR_IMAGE_NAME_AND_TAG=$(./scripts/circleci-jobs/setup-integration-tests.py)
             .circleci/do-exclusively --branch staging --job ${CIRCLE_JOB} npm run test:integration:eks:yaml
@@ -339,7 +339,7 @@ jobs:
           name: Notify Slack on failure
           command: ./scripts/slack/notify_failure.py "staging-release"
           when: on_fail
-  
+
   deploy_dev:
     <<: *default_container_config
     steps:
