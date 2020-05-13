@@ -1,22 +1,9 @@
-default_machine_config: &default_machine_config
+build_image:
+  # <<: *default_machine_config
   machine:
     enabled: true
     docker_layer_caching: true
   working_directory: ~/kubernetes-monitor
-
-default_container_config: &default_container_config
-  docker:
-    - image: circleci/node:12
-  working_directory: ~/kubernetes-monitor
-
-python_container_config: &python_container_config
-  docker:
-    - image: circleci/python:3
-  working_directory: ~/kubernetes-monitor
-
-
-build_image:
-  <<: *default_machine_config
   steps:
     - checkout
     - install_python_requests
@@ -35,7 +22,11 @@ build_image:
         when: on_fail
 
 build_operator:
-  <<: *default_machine_config
+  # <<: *default_machine_config
+  machine:
+    enabled: true
+    docker_layer_caching: true
+  working_directory: ~/kubernetes-monitor
   steps:
     - checkout
     - install_python_requests
@@ -75,7 +66,10 @@ build_operator:
         when: on_fail
 
 upload_operator:
-  <<: *python_container_config
+  # <<: *python_container_config
+  docker:
+    - image: circleci/python:3
+  working_directory: ~/kubernetes-monitor
   steps:
     - attach_workspace:
         at: snyk-operator
@@ -93,7 +87,11 @@ upload_operator:
           operator-courier push "${OPERATOR_DIR}" "${QUAY_NAMESPACE}" "${PACKAGE_NAME}" "${PACKAGE_VERSION}" "${QUAY_TOKEN}"
 
 unit_tests:
-  <<: *default_machine_config
+  # <<: *default_machine_config
+  machine:
+    enabled: true
+    docker_layer_caching: true
+  working_directory: ~/kubernetes-monitor
   steps:
     - checkout
     - setup_node12
@@ -111,7 +109,11 @@ unit_tests:
         when: on_fail
 
 system_tests:
-  <<: *default_machine_config
+  # <<: *default_machine_config
+  machine:
+    enabled: true
+    docker_layer_caching: true
+  working_directory: ~/kubernetes-monitor
   steps:
     - checkout
     - setup_node12
@@ -128,7 +130,11 @@ system_tests:
         when: on_fail
 
 integration_tests:
-  <<: *default_machine_config
+  # <<: *default_machine_config
+  machine:
+    enabled: true
+    docker_layer_caching: true
+  working_directory: ~/kubernetes-monitor
   steps:
     - checkout
     - setup_node12
@@ -150,7 +156,11 @@ integration_tests:
         path: /tmp/logs/test/integration/kind
 
 integration_tests_helm:
-  <<: *default_machine_config
+  # <<: *default_machine_config
+  machine:
+    enabled: true
+    docker_layer_caching: true
+  working_directory: ~/kubernetes-monitor
   steps:
     - checkout
     - setup_node12
@@ -172,7 +182,11 @@ integration_tests_helm:
         path: /tmp/logs/test/integration/kind-helm
 
 integration_tests_proxy:
-  <<: *default_machine_config
+  # <<: *default_machine_config
+  machine:
+    enabled: true
+    docker_layer_caching: true
+  working_directory: ~/kubernetes-monitor
   steps:
     - checkout
     - setup_node12
@@ -194,7 +208,11 @@ integration_tests_proxy:
         path: /tmp/logs/test/integration/proxy
 
 eks_integration_tests:
-  <<: *default_machine_config
+  # <<: *default_machine_config
+  machine:
+    enabled: true
+    docker_layer_caching: true
+  working_directory: ~/kubernetes-monitor
   steps:
     - checkout
     - install_python_requests
@@ -220,7 +238,11 @@ eks_integration_tests:
         path: /tmp/logs/test/integration/eks
 
 openshift3_integration_tests:
-  <<: *default_machine_config
+  # <<: *default_machine_config
+  machine:
+    enabled: true
+    docker_layer_caching: true
+  working_directory: ~/kubernetes-monitor
   steps:
     - checkout
     - setup_node12
@@ -241,7 +263,11 @@ openshift3_integration_tests:
         path: /tmp/logs/test/integration/openshift3
 
 openshift4_integration_tests:
-  <<: *default_machine_config
+  # <<: *default_machine_config
+  machine:
+    enabled: true
+    docker_layer_caching: true
+  working_directory: ~/kubernetes-monitor
   steps:
     - checkout
     - setup_node12
@@ -273,7 +299,10 @@ openshift4_integration_tests:
 
 ######################## MERGE TO STAGING ########################
 tag_and_push:
-  <<: *default_container_config
+  # <<: *default_container_config
+  docker:
+    - image: circleci/node:12
+  working_directory: ~/kubernetes-monitor
   steps:
     - checkout
     - setup_remote_docker
@@ -296,7 +325,10 @@ tag_and_push:
         when: on_fail
 
 deploy_dev:
-  <<: *default_container_config
+  # <<: *default_container_config
+  docker:
+    - image: circleci/node:12
+  working_directory: ~/kubernetes-monitor
   steps:
     - checkout
     - install_python_requests
@@ -317,7 +349,10 @@ deploy_dev:
 
 ######################## MERGE TO MASTER ########################
 publish:
-  <<: *default_container_config
+  # <<: *default_container_config
+  docker:
+    - image: circleci/node:12
+  working_directory: ~/kubernetes-monitor
   steps:
     - checkout
     - setup_remote_docker
@@ -369,7 +404,10 @@ publish:
         when: on_fail
 
 deploy_prod:
-  <<: *default_container_config
+  # <<: *default_container_config
+  docker:
+    - image: circleci/node:12
+  working_directory: ~/kubernetes-monitor
   steps:
     - checkout
     - install_python_requests
