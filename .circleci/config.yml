@@ -115,7 +115,7 @@ jobs:
 
           python -m pip install requests pyyaml
 
-          VERSION=$(python ./scripts/oeprator/tests/test-operator-upgrade.py)
+          VERSION=$(python ./scripts/operator/tests/test-operator-upgrade.py)
 
           echo "Currently released version is: ${VERSION}"
     working_directory: ~/kubernetes-monitor
