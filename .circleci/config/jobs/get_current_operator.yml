@@ -1,0 +1,9 @@
+docker:
+  - image: circleci/python:3
+working_directory: ~/kubernetes-monitor
+steps:
+  - checkout
+  - install_python_deps
+  - run:
+      name: Get current operator version
+      command:

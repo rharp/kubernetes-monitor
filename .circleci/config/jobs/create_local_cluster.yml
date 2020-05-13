@@ -1,0 +1,41 @@
+description: |
+    Creates an OpenShift instance within CircleCI that allows us to test
+    the the `snyk-monitor` operator upgrade path. The job uses a virutal
+    machine running in CircleCI to start the OpenShift Cluster, and uses
+    various scripts to install the operator, upgrade it, and verify the
+    expected functionality.
+
+executor: redhat-openshift/machine-for-local-cluster
+
+working_directory: ~/kubernetes-monitor
+
+steps:
+  - checkout
+
+  - redhat-openshift/create-local-cluster-with-oc:
+      skip-registry-check: true
+
+  - redhat-openshift/login-and-update-kubeconfig:
+      insecure-skip-tls-verify: true
+      openshift-platform-version: 3.x
+      username: dev1
+      password: password
+      server-address: 'https://127.0.0.1:8443'
+
+  - run:
+      command: |
+        # CircleCI virtual machine executors come with pyenv pre-installed,
+        # along with python v3.6.5. We can set this as our global python version
+        pyenv global 3.6.5
+
+        # Verify that python exists!
+        if ! which python > /dev/null; then
+          echo "Failed to find python"
+          exit 1
+        fi
+
+        python -m pip install requests pyyaml
+
+        VERSION=$(python ./scripts/oeprator/tests/test-operator-upgrade.py)
+
+        echo "Currently released version is: ${VERSION}"
