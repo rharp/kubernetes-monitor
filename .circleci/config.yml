@@ -119,15 +119,6 @@ jobs:
 
           echo "Currently released version is: ${VERSION}"
     working_directory: ~/kubernetes-monitor
-  default_container_config:
-    docker:
-    - image: circleci/node:12
-    working_directory: ~/kubernetes-monitor
-  default_machine_config:
-    machine:
-      docker_layer_caching: true
-      enabled: true
-    working_directory: ~/kubernetes-monitor
   deploy_dev:
     docker:
     - image: circleci/node:12
@@ -386,10 +377,6 @@ jobs:
         command: ./scripts/slack/notify_failure.py "master"
         name: Notify Slack on failure
         when: on_fail
-    working_directory: ~/kubernetes-monitor
-  python_container_config:
-    docker:
-    - image: circleci/python:3
     working_directory: ~/kubernetes-monitor
   system_tests:
     machine:
