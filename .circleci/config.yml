@@ -154,7 +154,7 @@ jobs:
           QUAY_NAMESPACE=snyk-runtime
           PACKAGE_NAME=snyk-operator
 
-          operator-courier push "${OPERATOR_DIR}" "${QUAY_NAMESPACE}" "${PACKAGE_NAME}" "${OC_VERSION}" "${QUAY_TOKEN}"
+          $(pyenv which operator-courier) push "${OPERATOR_DIR}" "${QUAY_NAMESPACE}" "${PACKAGE_NAME}" "${OC_VERSION}" "${QUAY_TOKEN}"
         name: Push operator to quay
     - run:
         command: |
