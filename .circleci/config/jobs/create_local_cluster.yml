@@ -23,14 +23,17 @@ steps:
       server-address: 'https://127.0.0.1:8443'
 
   - run:
+      name: Get last released operator version
       command: |
+        set -xeo pipefail
+
         # CircleCI virtual machine executors come with pyenv pre-installed,
         # along with python v3.6.5. We can set this as our global python version
         pyenv global 3.6.5
 
         # Verify that python exists!
         if ! which python > /dev/null; then
-          echo "Failed to find python"
+          >&2 echo "Failed to find python"
           exit 1
         fi
 
@@ -39,3 +42,60 @@ steps:
         VERSION=$(python ./scripts/operator/tests/test-operator-upgrade.py)
 
         echo "Currently released version is: ${VERSION}"
+        export OC_VERSION=${VERSION}
+
+  - run:
+      name: Package and deploy last released operator
+      command: |
+        set -xeo pipefail
+
+        if [[ -z $OC_VERSION ]]; then
+          >&2 echo "OC_VERSION variable is not set"
+          exit 1
+        fi
+
+        # Package operator to be uploaded to quay.io
+        ./scripts/operator/package-operator.sh $OC_VERSION $OC_VERSION $OC_VERSION
+
+        # We do not want to include the templating files when we push the operator,
+        # therefore we move the directory to /temp, and restore it later
+        mv ./snyk-operator/deploy/olm-catalog/snyk-operator/0.0.0 /temp/
+
+  - run:
+      name: Push operator to quay
+      command: |
+        set -xeo pipefail
+
+        python -m pip install operator-courier
+
+        export QUAY_TOKEN=$(curl -H "Content-Type: application/json" \
+          -XPOST https://quay.io/cnr/api/v1/users/login \
+          -d "{\"user\": {\"username\": \"${QUAY_USERNAME}\", \"password\": \"${QUAY_PASSWORD}\"}}" \
+          | jq -r .token)
+
+        OPERATOR_DIR=./snyk-operator/deploy/olm-catalog/snyk-operator/
+        QUAY_NAMESPACE=snyk-runtime
+        PACKAGE_NAME=snyk-operator
+
+        operator-courier push "${OPERATOR_DIR}" "${QUAY_NAMESPACE}" "${PACKAGE_NAME}" "${OC_VERSION}" "${QUAY_TOKEN}"
+
+  - run:
+      name: Apply operator installation files
+      command: |
+        kubectl apply -f ./test/fixtures/operator/operator-source.yaml
+        kubectl apply -f ./test/fixtures/operator/installation.yaml
+
+  - run:
+      name: Deploy snyk-monitor resource
+      command: |
+        cat <<EOF | kubectl apply -f -
+          apiVersion: charts.helm.k8s.io/v1alpha1
+          kind: SnykMonitor
+          metadata:
+            name: snyk-monitor
+            namespace: snyk-monitor
+          spec:
+            clusterName: TESTING OPERATOR UPGRADE
+        EOF
+
+

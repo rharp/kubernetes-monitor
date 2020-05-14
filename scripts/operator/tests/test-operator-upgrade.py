@@ -15,7 +15,7 @@ try:
     version = re_compile.search(yml["channels"][0]["currentCSV"]).group(0)
 except Exception as ex:
     print(
-        "error: couldn't match version number for operator:",
+        "error: couldn't find version number for operator:",
         ex,
         file=sys.stderr,
     )
