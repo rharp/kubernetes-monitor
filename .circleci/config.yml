@@ -162,7 +162,7 @@ jobs:
         name: Apply operator installation files
     - run:
         command: |
-          cat <<EOF | kubectl apply -f -
+          cat \<<EOF | kubectl apply -f -
             apiVersion: charts.helm.k8s.io/v1alpha1
             kind: SnykMonitor
             metadata:
