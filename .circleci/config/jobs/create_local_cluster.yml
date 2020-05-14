@@ -65,8 +65,9 @@ steps:
   - run:
       name: Push operator to quay
       command: |
-        set -xeo pipefail
+        set -eo pipefail
 
+        pyenv global 3.6.5
         python -m pip install operator-courier
 
         export QUAY_TOKEN=$(curl -H "Content-Type: application/json" \
@@ -78,7 +79,7 @@ steps:
         QUAY_NAMESPACE=snyk-runtime
         PACKAGE_NAME=snyk-operator
 
-        operator-courier push "${OPERATOR_DIR}" "${QUAY_NAMESPACE}" "${PACKAGE_NAME}" "${OC_VERSION}" "${QUAY_TOKEN}"
+        python -m operator-courier push "${OPERATOR_DIR}" "${QUAY_NAMESPACE}" "${PACKAGE_NAME}" "${OC_VERSION}" "${QUAY_TOKEN}"
 
   - run:
       name: Apply operator installation files
