@@ -105,7 +105,3 @@ steps:
           spec:
             clusterName: TESTING OPERATOR UPGRADE
         EOF
-
-  - run:
-      -
-

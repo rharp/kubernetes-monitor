@@ -168,7 +168,7 @@ jobs:
           kubectl apply -f ./test/fixtures/operator/installation.yaml
         name: Apply operator installation files
     - run:
-        command: |
+        command: |-
           cat \<<EOF | kubectl apply -f -
             apiVersion: charts.helm.k8s.io/v1alpha1
             kind: SnykMonitor
@@ -179,8 +179,6 @@ jobs:
               clusterName: TESTING OPERATOR UPGRADE
           EOF
         name: Deploy snyk-monitor resource
-    - run:
-      - null
     working_directory: ~/kubernetes-monitor
   deploy_dev:
     docker:
