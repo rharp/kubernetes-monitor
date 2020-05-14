@@ -42,7 +42,7 @@ steps:
         VERSION=$(python ./scripts/operator/tests/test-operator-upgrade.py)
 
         echo "Currently released version is: ${VERSION}"
-        export OC_VERSION=${VERSION}
+        echo "export OC_VERSION=${VERSION}" >> $BASH_ENV
 
   - run:
       name: Package and deploy last released operator
