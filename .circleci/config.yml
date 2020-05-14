@@ -136,7 +136,8 @@ jobs:
 
           # We do not want to include the templating files when we push the operator,
           # therefore we move the directory to /temp, and restore it later
-          mv ./snyk-operator/deploy/olm-catalog/snyk-operator/0.0.0 /temp/
+          mkdir temp
+          mv ./snyk-operator/deploy/olm-catalog/snyk-operator/0.0.0 ./temp/
         name: Package and deploy last released operator
     - run:
         command: |
