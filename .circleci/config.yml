@@ -177,13 +177,18 @@ jobs:
           kubectl apply -f ./test/fixtures/operator/installation.yaml
 
           set +e
-          opsrc=$(kubectl get operatorsource snyk-operator -n openshift-marketplace --no-headers 2>/dev/null | awk '{print $7}')
+          opsrc=$(kubectl get operatorsource snyk-operator -n openshift-marketplace --no-headers 2>/dev/null | awk '{print $9}')
 
           set -e
           if [[ -z "${opsrc}" || "${opsrc}" == "Failed" ]]; then
             >&2 echo "failed to deploy operator source resource"
             exit 1
           fi
+
+          kubectl get pods -n snyk-monitor --no-headers | \
+            grep "snyk-operator" | \
+            awk 'END { if (NR==0) exit 1; else print $1 }' | \
+            xargs -I{} kubectl wait pod/{} -n snyk-monitor --timeout 60s --for condition=Ready
         name: Apply operator installation files
     - run:
         command: |
