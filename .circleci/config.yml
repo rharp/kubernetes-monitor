@@ -260,14 +260,14 @@ jobs:
           curl -XDELETE -H "Accept: application/json" -H "Content-Type: application/json" \
             -H "Authorization: ${QUAY_DELETE_TOKEN}" "https://quay.io/cnr/api/v1/packages/snyk-runtime/snyk-operator/${LATEST_TAG}/helm"
 
-          kubectl delete -f ./test/fixtures/operator/operator-source.yaml
-          kubectl delete -f ./test/fixtures/operator/installation.yaml
+          # kubectl delete -f ./test/fixtures/operator/operator-source.yaml
+          # kubectl delete -f ./test/fixtures/operator/installation.yaml
 
-          kubectl patch customresourcedefinition snykmonitors.charts.helm.k8s.io -p '{"metadata":{"finalizers":[]}}' --type=merge -n snyk-monitor
-          kubectl patch snykmonitors.charts.helm.k8s.io snyk-monitor -p '{"metadata":{"finalizers":[]}}' --type=merge -n snyk-monitor
-          kubectl delete -f ./test/fixtures/operator/test-resource.yaml
+          # kubectl patch customresourcedefinition snykmonitors.charts.helm.k8s.io -p '{"metadata":{"finalizers":[]}}' --type=merge -n snyk-monitor
+          # kubectl patch snykmonitors.charts.helm.k8s.io snyk-monitor -p '{"metadata":{"finalizers":[]}}' --type=merge -n snyk-monitor
+          # kubectl delete -f ./test/fixtures/operator/test-resource.yaml
 
-          kubectl delete ns snyk-monitor
+          # kubectl delete ns snyk-monitor
         name: Cleanup
         when: always
     working_directory: ~/kubernetes-monitor
