@@ -158,7 +158,9 @@ steps:
         QUAY_NAMESPACE=snyk-runtime
         PACKAGE_NAME=snyk-operator
 
+        set +x
         operator-courier push "${OPERATOR_DIR}" "${QUAY_NAMESPACE}" "${PACKAGE_NAME}" "${LATEST_TAG}" "${QUAY_TOKEN}"
+        set -x
         echo "export LATEST_TAG=${LATEST_TAG}" >> $BASH_ENV
 
         kubectl delete -f ./test/fixtures/operator/operator-source.yaml
