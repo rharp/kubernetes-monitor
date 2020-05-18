@@ -143,6 +143,7 @@ steps:
         PACKAGE_NAME=snyk-operator
 
         operator-courier push "${OPERATOR_DIR}" "${QUAY_NAMESPACE}" "${PACKAGE_NAME}" "${LATEST_TAG}" "${QUAY_TOKEN}"
+        echo "export LATEST_TAG=${LATEST_TAG}" >> $BASH_ENV
 
         kubectl delete -f ./test/fixtures/operator/operator-source.yaml
         kubectl apply -f ./test/fixtures/operator/operator-source.yaml
@@ -163,11 +164,11 @@ steps:
   - run:
       name: Cleanup
       command: |
-
         curl -XDELETE -H "Accept: application/json" -H "Content-Type: application/json" \
-          -H "Authorization: ${QUAY_TOKEN}" "https://quay.io/cnr/api/v1/packages/snyk-runtime/snyk-operator/$VERSION/helm"
+          -H "Authorization: ${QUAY_TOKEN}" "https://quay.io/cnr/api/v1/packages/snyk-runtime/snyk-operator/${LATEST_TAG}/helm"
 
         kubectl delete -f ./test/fixtures/operator/operator-source.yaml
         kubectl delete -f ./test/fixtures/operator/installation.yaml
         kubectl delete -f ./test/fixtures/operator/test-resource.yaml
         kubectl delete ns snyk-monitor
+      when: always
