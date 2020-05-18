@@ -82,15 +82,16 @@ steps:
       name: Configure snyk-monitor namespace
       command: |
         set -xo pipefail
+        set +e
 
         ns=$(kubectl get ns snyk-monitor --no-headers --output=go-template={{.metadata.name}} 2>/dev/null)
 
-        set -e
-        if [[ -z "${ns}"" ]]; then
+        if [[ -z "${ns}" ]]; then
           echo "snyk-monitor namespace not found, creating..."
           kubectl create ns snyk-monitor
         fi
 
+        set -e
         kubectl create secret generic snyk-monitor -n snyk-monitor --from-literal=integrationId=2eb0b704-de07-4280-bab6-a7911153047b --from-literal=dockercfg.json={}
 
   - run:
@@ -164,6 +165,9 @@ steps:
   - run:
       name: Cleanup
       command: |
+        set +e
+        curl -XDELETE -H "Accept: application/json" -H "Content-Type: application/json" \
+          -H "Authorization: ${QUAY_TOKEN}" "https://quay.io/cnr/api/v1/packages/snyk-runtime/snyk-operator/${OC_VERSION}/helm"
         curl -XDELETE -H "Accept: application/json" -H "Content-Type: application/json" \
           -H "Authorization: ${QUAY_TOKEN}" "https://quay.io/cnr/api/v1/packages/snyk-runtime/snyk-operator/${LATEST_TAG}/helm"
 
