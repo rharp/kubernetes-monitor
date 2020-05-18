@@ -199,7 +199,7 @@ jobs:
 
           kubectl apply -f ./test/fixtures/operator/test-resource.yaml
           # Eventually consistent is fun!
-          sleep 10
+          sleep 30
 
           kubectl get pods -n snyk-monitor --no-headers | \
             grep "snyk-monitor" | \
