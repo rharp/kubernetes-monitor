@@ -126,6 +126,8 @@ steps:
         set -o pipefail
 
         kubectl apply -f ./test/fixtures/operator/test-resource.yaml
+        # Eventually consistent is fun!
+        sleep 10
 
         kubectl get pods -n snyk-monitor --no-headers | \
           grep "snyk-monitor" | \
@@ -157,6 +159,7 @@ steps:
 
         kubectl delete -f ./test/fixtures/operator/operator-source.yaml
         kubectl apply -f ./test/fixtures/operator/operator-source.yaml
+        sleep 60
 
         VERSION=$(kubectl get pods -n snyk-monitor --no-headers | \
           grep "snyk-monitor" | \
@@ -176,12 +179,16 @@ steps:
       command: |
         set +e
         curl -XDELETE -H "Accept: application/json" -H "Content-Type: application/json" \
-          -H "Authorization: ${QUAY_TOKEN}" "https://quay.io/cnr/api/v1/packages/snyk-runtime/snyk-operator/${OC_VERSION}/helm"
+          -H "Authorization: ${QUAY_DELETE_TOKEN}" "https://quay.io/cnr/api/v1/packages/snyk-runtime/snyk-operator/${OC_VERSION}/helm"
         curl -XDELETE -H "Accept: application/json" -H "Content-Type: application/json" \
-          -H "Authorization: ${QUAY_TOKEN}" "https://quay.io/cnr/api/v1/packages/snyk-runtime/snyk-operator/${LATEST_TAG}/helm"
+          -H "Authorization: ${QUAY_DELETE_TOKEN}" "https://quay.io/cnr/api/v1/packages/snyk-runtime/snyk-operator/${LATEST_TAG}/helm"
 
         kubectl delete -f ./test/fixtures/operator/operator-source.yaml
         kubectl delete -f ./test/fixtures/operator/installation.yaml
+
+        kubectl patch customresourcedefinition snykmonitors.charts.helm.k8s.io -p '{"metadata":{"finalizers":[]}}' --type=merge -n snyk-monitor
+        kubectl patch snykmonitors.charts.helm.k8s.io snyk-monitor -p '{"metadata":{"finalizers":[]}}' --type=merge -n snyk-monitor
         kubectl delete -f ./test/fixtures/operator/test-resource.yaml
+
         kubectl delete ns snyk-monitor
       when: always
