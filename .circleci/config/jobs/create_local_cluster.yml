@@ -76,7 +76,6 @@ steps:
         PACKAGE_NAME=snyk-operator
 
         operator-courier push "${OPERATOR_DIR}" "${QUAY_NAMESPACE}" "${PACKAGE_NAME}" "${OC_VERSION}" "${QUAY_TOKEN}"
-        echo "export QUAY_TOKEN=${QUAY_TOKEN}" >> $BASH_ENV
 
   - run:
       name: Configure snyk-monitor namespace
@@ -140,7 +139,7 @@ steps:
         set -xeo pipefail
 
         curl -XDELETE -H "Accept: application/json" -H "Content-Type: application/json" \
-          -H "Authorization: ${QUAY_TOKEN}" "https://quay.io/cnr/api/v1/packages/snyk-runtime/snyk-operator/$OC_VERSION/helm"
+          -H "Authorization: ${QUAY_DELETE_TOKEN}" "https://quay.io/cnr/api/v1/packages/snyk-runtime/snyk-operator/$OC_VERSION/helm"
 
         mv ./temp/0.0.0 ./snyk-operator/deploy/olm-catalog/snyk-operator/
         rm -rf ./snyk-operator/deploy/olm-catalog/snyk-operator/${OC_VERSION}
@@ -149,6 +148,11 @@ steps:
           LATEST_TAG=${LATEST_TAG_WITH_V:1}
 
         ./scripts/operator/package-operator.sh ${LATEST_TAG} ${LATEST_TAG} ${LATEST_TAG}
+
+        export QUAY_TOKEN=$(curl -H "Content-Type: application/json" \
+          -XPOST https://quay.io/cnr/api/v1/users/login \
+          -d "{\"user\": {\"username\": \"${QUAY_USERNAME}\", \"password\": \"${QUAY_PASSWORD}\"}}" \
+          | jq -r .token)
 
         OPERATOR_DIR=./snyk-operator/deploy/olm-catalog/snyk-operator/
         QUAY_NAMESPACE=snyk-runtime
