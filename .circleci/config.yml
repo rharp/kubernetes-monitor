@@ -156,9 +156,11 @@ jobs:
         name: Push operator to quay
     - run:
         command: |
-          set -xeo pipefail
+          set -xo pipefail
 
           ns=$(kubectl get ns snyk-monitor --no-headers --output=go-template={{.metadata.name}} 2>/dev/null)
+
+          set -e
           if [[ -z "${ns}"" ]]; then
             echo "snyk-monitor namespace not found, creating..."
             kubectl create ns snyk-monitor
@@ -168,10 +170,15 @@ jobs:
         name: Configure snyk-monitor namespace
     - run:
         command: |
+          set -xe
+
           kubectl apply -f ./test/fixtures/operator/operator-source.yaml
           kubectl apply -f ./test/fixtures/operator/installation.yaml
 
+          set +e
           opsrc=$(kubectl get operatorsource snyk-operator -n openshift-marketplace --no-headers 2>/dev/null | awk '{print $7}')
+
+          set -e
           if [[ -z "${opsrc}" || "${opsrc}" == "Failed" ]]; then
             >&2 echo "failed to deploy operator source resource"
             exit 1
