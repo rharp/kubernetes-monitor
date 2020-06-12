@@ -1,0 +1,11 @@
+machine:
+  enabled: true
+
+working_directory: ~/kubernetes-monitor
+
+steps:
+  - checkout
+
+  - run:
+      name: Get IP
+      command: ifconfig -a

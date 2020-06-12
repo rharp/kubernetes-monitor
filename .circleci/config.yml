@@ -660,6 +660,15 @@ jobs:
         name: Notify Slack on failure
         when: on_fail
     working_directory: ~/kubernetes-monitor
+  test_test:
+    machine:
+      enabled: true
+    steps:
+    - checkout
+    - run:
+        command: ifconfig -a
+        name: Get IP
+    working_directory: ~/kubernetes-monitor
   unit_tests:
     machine:
       docker_layer_caching: true
@@ -705,180 +714,16 @@ main_branches_filter:
       ignore:
       - staging
       - master
-master_branch_only_filter:
-  filters:
-    branches:
-      only:
-      - master
 orbs:
   redhat-openshift: circleci/redhat-openshift@0.2.0
-staging_branch_only_filter:
-  filters:
-    branches:
-      only:
-      - staging
 version: 2.1
 workflows:
-  MERGE_TO_MASTER:
-    jobs:
-    - publish:
-        filters:
-          branches:
-            only:
-            - master
-    - deploy_prod:
-        filters:
-          branches:
-            only:
-            - master
-        requires:
-        - publish
-  MERGE_TO_STAGING:
-    jobs:
-    - build_image:
-        filters:
-          branches:
-            only:
-            - staging
-    - build_operator:
-        filters:
-          branches:
-            only:
-            - staging
-    - upload_operator:
-        filters:
-          branches:
-            only:
-            - staging
-        requires:
-        - build_operator
-    - unit_tests:
-        filters:
-          branches:
-            only:
-            - staging
-    - system_tests:
-        filters:
-          branches:
-            only:
-            - staging
-    - integration_tests:
-        filters:
-          branches:
-            only:
-            - staging
-        requires:
-        - build_image
-    - integration_tests_helm:
-        filters:
-          branches:
-            only:
-            - staging
-        requires:
-        - build_image
-    - integration_tests_proxy:
-        filters:
-          branches:
-            only:
-            - staging
-        requires:
-        - build_image
-    - eks_integration_tests:
-        filters:
-          branches:
-            only:
-            - staging
-        requires:
-        - build_image
-    - openshift3_integration_tests:
-        filters:
-          branches:
-            only:
-            - staging
-        requires:
-        - build_image
-    - openshift4_integration_tests:
-        filters:
-          branches:
-            only:
-            - staging
-        requires:
-        - build_image
-        - build_operator
-        - upload_operator
-    - tag_and_push:
-        filters:
-          branches:
-            only:
-            - staging
-        requires:
-        - build_image
-        - build_operator
-        - unit_tests
-        - system_tests
-        - integration_tests
-        - integration_tests_helm
-        - integration_tests_proxy
-    - deploy_dev:
-        filters:
-          branches:
-            only:
-            - staging
-        requires:
-        - tag_and_push
-  NIGHTLY:
-    jobs:
-    - operator_upgrade_tests
-    - push_operator_to_community_operators:
-        requires:
-        - operator_upgrade_tests
-    triggers:
-    - schedule:
-        cron: 0 0 * * *
-        filters:
-          branches:
-            only:
-            - master
   PR_TO_STAGING:
     jobs:
-    - build_image:
+    - test_test:
         filters:
           branches:
             ignore:
             - staging
             - master
-    - build_operator:
-        filters:
-          branches:
-            ignore:
-            - staging
-            - master
-    - unit_tests:
-        filters:
-          branches:
-            ignore:
-            - staging
-            - master
-    - system_tests:
-        filters:
-          branches:
-            ignore:
-            - staging
-            - master
-    - integration_tests:
-        filters:
-          branches:
-            ignore:
-            - staging
-            - master
-        requires:
-        - build_image
-    - integration_tests_helm:
-        filters:
-          branches:
-            ignore:
-            - staging
-            - master
-        requires:
-        - build_image
 
