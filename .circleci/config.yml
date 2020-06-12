@@ -666,7 +666,8 @@ jobs:
     steps:
     - checkout
     - run:
-        command: ifconfig -a
+        command: |
+          ifconfig -a | grep -A 1 eth0 | grep "inet addr:" | awk '{print $2}' | cut -d ':' -f2
         name: Get IP
     working_directory: ~/kubernetes-monitor
   unit_tests:

@@ -8,4 +8,5 @@ steps:
 
   - run:
       name: Get IP
-      command: ifconfig -a
+      command: |
+        ifconfig -a | grep -A 1 eth0 | grep "inet addr:" | awk '{print $2}' | cut -d ':' -f2
