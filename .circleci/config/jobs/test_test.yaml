@@ -17,13 +17,13 @@ steps:
       name: Download KinD
       command: |
         curl -Lo ./kind https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-linux-amd64
-        chmod +x kind
+        chmod +x ./kind
 
   - run:
       name: Download kubectl
       command: |
         curl -L https://storage.googleapis.com/kubernetes-release/release/1.18.0/bin/linux/amd64/kubectl -o kubectl
-        chmod +x kubectl
+        chmod +x ./kubectl
 
   - run:
       name: Create KinD cluster with private container registry
@@ -40,7 +40,7 @@ steps:
 
         sed -i "s|IP|${IP}|g" ./test/fixtures/cluster.yaml
         sed -i "s|PORT|${reg_port}|g" ./test/fixtures/cluster.yaml
-        kind create cluster --config=./test/fixtures/cluster.yaml
+        ./kind create cluster --config=./test/fixtures/cluster.yaml
 
         # connect the registry to the cluster network
         docker network connect "kind" "${reg_name}"

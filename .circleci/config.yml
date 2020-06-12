@@ -674,12 +674,12 @@ jobs:
     - run:
         command: |
           curl -Lo ./kind https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-linux-amd64
-          chmod +x kind
+          chmod +x ./kind
         name: Download KinD
     - run:
         command: |
           curl -L https://storage.googleapis.com/kubernetes-release/release/1.18.0/bin/linux/amd64/kubectl -o kubectl
-          chmod +x kubectl
+          chmod +x ./kubectl
         name: Download kubectl
     - run:
         command: |
@@ -695,7 +695,7 @@ jobs:
 
           sed -i "s|IP|${IP}|g" ./test/fixtures/cluster.yaml
           sed -i "s|PORT|${reg_port}|g" ./test/fixtures/cluster.yaml
-          kind create cluster --config=./test/fixtures/cluster.yaml
+          ./kind create cluster --config=./test/fixtures/cluster.yaml
 
           # connect the registry to the cluster network
           docker network connect "kind" "${reg_name}"
