@@ -693,31 +693,18 @@ jobs:
               registry:2
           fi
 
-          # create a cluster with the local registry enabled in containerd
-          cat <<EOF | kind create cluster --config=-
-          kind: Cluster
-          apiVersion: kind.x-k8s.io/v1alpha4
-          containerdConfigPatches:
-          - |-
-            [plugins."io.containerd.grpc.v1.cri".registry.mirrors."${IP}:${reg_port}"]
-              endpoint = ["http://${IP}:${reg_port}:${reg_port}"]
-          EOF
+          sed -i "s|IP|${IP}|g" ./test/fixtures/cluster.yaml
+          sed -i "s|PORT|${reg_port}|g" ./test/fixtures/cluster.yaml
+          kind create cluster --config=./test/fixtures/cluster.yaml
 
           # connect the registry to the cluster network
           docker network connect "kind" "${reg_name}"
         name: Create KinD cluster with private container registry
     - run:
-        command: "cat <<EOF | tee job.yaml\napiVersion: batch/v1\nkind: Job\nmetadata:\n
-          \ name: my-job\nspec:\n  template:\n    spec:\n      restartPolicy: Never\n
-          \     containers:\n      - name: my-container\n        image: golang:1.13.1-alpine3.10\n
-          \       command: \n          - \"sh\"\n        args:\n          - \"-c\"\n
-          \         - \"apk --no-cache add git make gcc musl-dev ostree-dev go-md2man
-          &&\n          git clone --depth 1 -b 'v0.2.0' https://github.com/containers/skopeo
-          $GOPATH/src/github.com/containers/skopeo &&\n          cd $GOPATH/src/github.com/containers/skopeo
-          &&\n          make binary-local-static DISABLE_CGO=1 &&\n          make
-          install &&\n          skopeo copy --dest-tls-verify=false docker://nginx:latest
-          docker://${IP}:5000/nginx:latest\"\nEOF\n./kubectl apply -f job.yaml\nsleep
-          10\n./kubectl logs -f job.batch/my-job\n"
+        command: |
+          ./kubectl apply -f test/fixtures/job.yaml
+          sleep 10
+          ./kubectl logs -f job.batch/my-job
         name: Create KinD cluster with private container registry
     working_directory: ~/kubernetes-monitor
   unit_tests:

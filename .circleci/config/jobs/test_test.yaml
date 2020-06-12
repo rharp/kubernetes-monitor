@@ -38,15 +38,9 @@ steps:
             registry:2
         fi
 
-        # create a cluster with the local registry enabled in containerd
-        cat <<EOF | kind create cluster --config=-
-        kind: Cluster
-        apiVersion: kind.x-k8s.io/v1alpha4
-        containerdConfigPatches:
-        - |-
-          [plugins."io.containerd.grpc.v1.cri".registry.mirrors."${IP}:${reg_port}"]
-            endpoint = ["http://${IP}:${reg_port}:${reg_port}"]
-        EOF
+        sed -i "s|IP|${IP}|g" ./test/fixtures/cluster.yaml
+        sed -i "s|PORT|${reg_port}|g" ./test/fixtures/cluster.yaml
+        kind create cluster --config=./test/fixtures/cluster.yaml
 
         # connect the registry to the cluster network
         docker network connect "kind" "${reg_name}"
@@ -54,29 +48,6 @@ steps:
   - run:
       name: Create KinD cluster with private container registry
       command: |
-        cat <<EOF | tee job.yaml
-        apiVersion: batch/v1
-        kind: Job
-        metadata:
-          name: my-job
-        spec:
-          template:
-            spec:
-              restartPolicy: Never
-              containers:
-              - name: my-container
-                image: golang:1.13.1-alpine3.10
-                command: 
-                  - "sh"
-                args:
-                  - "-c"
-                  - "apk --no-cache add git make gcc musl-dev ostree-dev go-md2man &&
-                  git clone --depth 1 -b 'v0.2.0' https://github.com/containers/skopeo $GOPATH/src/github.com/containers/skopeo &&
-                  cd $GOPATH/src/github.com/containers/skopeo &&
-                  make binary-local-static DISABLE_CGO=1 &&
-                  make install &&
-                  skopeo copy --dest-tls-verify=false docker://nginx:latest docker://${IP}:5000/nginx:latest"
-        EOF
-        ./kubectl apply -f job.yaml
+        ./kubectl apply -f test/fixtures/job.yaml
         sleep 10
         ./kubectl logs -f job.batch/my-job
