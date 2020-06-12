@@ -662,13 +662,63 @@ jobs:
     working_directory: ~/kubernetes-monitor
   test_test:
     machine:
+      docker_layer_caching: true
       enabled: true
     steps:
     - checkout
     - run:
         command: |
-          ifconfig -a | grep -A 1 eth0 | grep "inet addr:" | awk '{print $2}' | cut -d ':' -f2
+          IP=$(ifconfig -a | grep -A 1 eth0 | grep "inet addr:" | awk '{print $2}' | cut -d ':' -f2)
+          echo "export IP=${IP} >> $BASH_ENV"
         name: Get IP
+    - run:
+        command: |
+          curl -Lo ./kind https://github.com/kubernetes-sigs/kind/releases/download/v0.7.0/kind-linux-amd64
+          chmod +x kind
+        name: Download KinD
+    - run:
+        command: |
+          curl -L https://storage.googleapis.com/kubernetes-release/release/1.18.0/bin/linux/amd64/kubectl -o kubectl
+          chmod +x kubectl
+        name: Download kubectl
+    - run:
+        command: |
+          # create registry container unless it already exists
+          reg_name=${IP}
+          reg_port='5000'
+          running="$(docker inspect -f '{{.State.Running}}' "${reg_name}" 2>/dev/null || true)"
+          if [ "${running}" != 'true' ]; then
+            docker run \
+              -d --restart=always -p "${IP}:${reg_port}:5000" --name "${reg_name}" \
+              registry:2
+          fi
+
+          # create a cluster with the local registry enabled in containerd
+          cat <<EOF | kind create cluster --config=-
+          kind: Cluster
+          apiVersion: kind.x-k8s.io/v1alpha4
+          containerdConfigPatches:
+          - |-
+            [plugins."io.containerd.grpc.v1.cri".registry.mirrors."${IP}:${reg_port}"]
+              endpoint = ["http://${IP}:${reg_port}:${reg_port}"]
+          EOF
+
+          # connect the registry to the cluster network
+          docker network connect "kind" "${reg_name}"
+        name: Create KinD cluster with private container registry
+    - run:
+        command: "cat <<EOF | tee job.yaml\napiVersion: batch/v1\nkind: Job\nmetadata:\n
+          \ name: my-job\nspec:\n  template:\n    spec:\n      restartPolicy: Never\n
+          \     containers:\n      - name: my-container\n        image: golang:1.13.1-alpine3.10\n
+          \       command: \n          - \"sh\"\n        args:\n          - \"-c\"\n
+          \         - \"apk --no-cache add git make gcc musl-dev ostree-dev go-md2man
+          &&\n          git clone --depth 1 -b 'v0.2.0' https://github.com/containers/skopeo
+          $GOPATH/src/github.com/containers/skopeo &&\n          cd $GOPATH/src/github.com/containers/skopeo
+          &&\n          make binary-local-static DISABLE_CGO=1 &&\n          make
+          install &&\n          skopeo copy --dest-tls-verify=false docker://nginx:latest
+          docker://${IP}:5000/nginx:latest\"\nEOF\n./kubectl apply -f job.yaml\nsleep
+          10\n./kubectl logs -f job.batch/my-job\n"
+        name: Create KinD cluster with private container registry
     working_directory: ~/kubernetes-monitor
   unit_tests:
     machine:
