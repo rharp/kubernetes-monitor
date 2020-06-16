@@ -145,6 +145,22 @@ export async function waitForServiceAccount(name: string, namespace: string): Pr
   }
 }
 
+export async function waitForJob(name: string, namespace: string): Promise<void> {
+  console.log(`Trying to find job ${name} in namespace ${namespace}`);
+  for (let attempt = 0; attempt < 60; attempt++) {
+    try {
+      await exec(`./kubectl get jobs/${name} -n ${namespace}`);
+    } catch (error) {
+      await sleep(1000);
+    }
+  }
+  console.log(`Found job ${name} in namespace ${namespace}`);
+
+  console.log(`Begin waiting for job ${name} in namespace ${namespace}`);
+  await exec(`./kubectl wait --for=condition=complete jobs/${name} -n ${namespace} --timeout=12000s`);
+  console.log(`Job ${name} in namespace ${namespace} is complete`);
+}
+
 async function getLatestStableK8sRelease(): Promise<string> {
   const k8sRelease = await needle('get',
     'https://storage.googleapis.com/kubernetes-release/release/stable.txt',

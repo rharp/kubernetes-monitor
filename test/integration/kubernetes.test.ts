@@ -1,4 +1,5 @@
 import { CoreV1Api, KubeConfig, AppsV1Api } from '@kubernetes/client-node';
+import { exec } from 'child-process-promise';
 import setup = require('../setup');
 import * as tap from 'tap';
 import { WorkloadKind } from '../../src/supervisor/types';
@@ -63,6 +64,22 @@ tap.test('snyk-monitor container started', async (t) => {
   t.ok(monitorPod!.status !== undefined, 'Snyk monitor status object exists');
   t.notEqual(monitorPod!.status!.phase, 'Failed', 'Snyk monitor container didn\'t fail');
   console.log('Done -- snyk-monitor exists!');
+});
+
+tap.test('test insecure registry', async (t) => {
+  //docker create registry
+  console.log('Creating local container registry...');
+  const result = await exec(`/Users/agatakrajewska/Source/kubernetes-monitor/scripts/docker/create-registry-container.sh`);
+  console.log('EXEC ERROR:' + result.stderr);
+  //apply the job
+  console.log('Pushing busybox:latest image to the local registry');
+  await kubectl.applyK8sYaml('./test/fixtures/registry-push-job.yaml');
+  // await kubectl.waitForJob('push-to-registry', 'services');
+
+  // await kubectl.applyK8sYaml('./test/fixtures/registry-deployment.yaml');
+
+
+  t.pass('successfully pushed image to a local registry');
 });
 
 tap.test('snyk-monitor sends data to kubernetes-upstream', async (t) => {
@@ -313,4 +330,20 @@ tap.test('notify upstream of deleted pods that have no OwnerReference', async (t
     validationResult,
     'snyk-monitor sends deleted workloads to upstream for pods without OwnerReference',
   );
+});
+
+tap.test('snyk-monitor secure configuration is as expected', async (t) => {
+  const kubeConfig = new KubeConfig();
+  kubeConfig.loadFromDefault();
+  const k8sApi = kubeConfig.makeApiClient(AppsV1Api);
+
+  const response = await k8sApi.readNamespacedDeployment(
+    'snyk-monitor',
+    'snyk-monitor',
+  );
+  const deployment = response.body;
+
+  validateSecureConfiguration(t, deployment);
+  validateVolumeMounts(t, deployment);
+  validateEnvironmentVariables(t, deployment);
 });
