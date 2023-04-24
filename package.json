@@ -37,7 +37,7 @@
     "@types/sinon": "^7.5.2",
     "@types/tunnel": "0.0.1",
     "async": "^2.6.2",
-    "aws-sdk": "^2.633.0",
+    "aws-sdk": "^2.1354.0",
     "bunyan": "^1.8.13",
     "child-process-promise": "^2.2.1",
     "lru-cache": "^5.1.1",
@@ -49,7 +49,7 @@
     "tunnel": "0.0.6",
     "typescript": "^3.8.3",
     "ws": "^7.2.1",
-    "yaml": "^1.7.2",
+    "yaml": "^2.2.2",
     "snyk": "^1.320.3"
   },
   "devDependencies": {
